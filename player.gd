@@ -6,6 +6,7 @@ extends CharacterBody3D
 @export var sprint_speed = 1.5
 @export var jump_height = 1.0
 @export var mouse_sensitivity = 0.002
+@export var max_hitpoints := 100
 
 @export var fall_multiplyer = 2.0
 
@@ -16,6 +17,11 @@ extends CharacterBody3D
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var mouse_motion := Vector2.ZERO
+var hitpoints: int = max_hitpoints:
+	set(value):
+		hitpoints = value
+		if hitpoints <= 0:
+			get_tree().quit()
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
