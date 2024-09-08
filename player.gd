@@ -11,7 +11,8 @@ extends CharacterBody3D
 @export var fall_multiplyer = 2.0
 
 @onready var camera_pivot: Node3D = $CameraPivot
-
+@onready var damage_animation_player: AnimationPlayer = $DamageTexture/DamageAnimationPlayer
+@onready var game_over_menu: Control = $GameOverMenu
 
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
@@ -19,9 +20,12 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var mouse_motion := Vector2.ZERO
 var hitpoints: int = max_hitpoints:
 	set(value):
+		if value < hitpoints:
+			damage_animation_player.stop(false)
+			damage_animation_player.play("TakeDamage")
 		hitpoints = value
 		if hitpoints <= 0:
-			get_tree().quit()
+			game_over_menu.game_over()
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

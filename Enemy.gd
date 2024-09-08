@@ -10,8 +10,9 @@ const SPEED = 5.0
 # Get the gravity from the project settings to be synced with RigidBody nodes.
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var navigation_agent_3d: NavigationAgent3D = $NavigationAgent3D
-@onready var animation_tree: AnimationTree = $AnimationTree
+#@onready var animation_tree: AnimationTree = $AnimationTree
 #@onready var playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"]
+@onready var animation_player: AnimationPlayer = $AnimationPlayer
 
 var player
 var provoked := false
@@ -44,8 +45,7 @@ func _physics_process(delta: float) -> void:
 		
 	if provoked:
 		if distance <= attack_range:
-			pass
-			#playback.travel("Attack")
+			animation_player.play("Attack")
 	
 	if direction:
 		look_at_target(direction)

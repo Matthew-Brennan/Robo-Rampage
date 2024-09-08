@@ -1,13 +1,79 @@
-[gd_scene load_steps=7 format=3 uid="uid://dl6ovm21v4305"]
+[gd_scene load_steps=15 format=3 uid="uid://dl6ovm21v4305"]
 
 [ext_resource type="Script" path="res://player.gd" id="1_5gnal"]
 [ext_resource type="Script" path="res://SmoothCamera.gd" id="2_d2npl"]
 [ext_resource type="Script" path="res://Crosshair.gd" id="3_4c3og"]
+[ext_resource type="PackedScene" uid="uid://c1g2ck83pqmqm" path="res://Weapons/rifle.tscn" id="3_m3dbh"]
+[ext_resource type="Script" path="res://WeaponHandler.gd" id="3_r1kcv"]
 [ext_resource type="PackedScene" uid="uid://b5nsph7ijkgs7" path="res://Weapons/smg.tscn" id="3_xw4mp"]
+[ext_resource type="Texture2D" uid="uid://c1mb8bs4a8opk" path="res://Player/damage.png" id="5_jbh87"]
+[ext_resource type="Script" path="res://AmmoHandler.gd" id="6_cm0ym"]
+[ext_resource type="PackedScene" uid="uid://b2do6ied667ao" path="res://game_over_menu.tscn" id="6_mmoj2"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_ao7a1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_w3tko"]
+
+[sub_resource type="Animation" id="Animation_pe176"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_dyt1n"]
+resource_name = "TakeDamage"
+length = 0.41
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.5, 1.5)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath(".:modulate")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(-2, -2),
+"update": 0,
+"values": [Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_usafc"]
+_data = {
+"RESET": SubResource("Animation_pe176"),
+"TakeDamage": SubResource("Animation_dyt1n")
+}
 
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -23,9 +89,43 @@ shape = SubResource("CapsuleShape3D_w3tko")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.509264, 0)
 
 [node name="SmoothCamera" type="Camera3D" parent="CameraPivot"]
+cull_mask = 1048573
 script = ExtResource("2_d2npl")
 
-[node name="smg" parent="CameraPivot/SmoothCamera" instance=ExtResource("3_xw4mp")]
+[node name="RemoteTransform3D" type="RemoteTransform3D" parent="CameraPivot/SmoothCamera"]
+remote_path = NodePath("../../../SubViewportContainer/SubViewport/WeaponCamera")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(1152, 648)
+render_target_update_mode = 4
+
+[node name="WeaponCamera" type="Camera3D" parent="SubViewportContainer/SubViewport"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.50926, 0)
+cull_mask = 2
+
+[node name="WeaponHandler" type="Node3D" parent="SubViewportContainer/SubViewport/WeaponCamera" node_paths=PackedStringArray("weapon_1", "weapon_2")]
+script = ExtResource("3_r1kcv")
+weapon_1 = NodePath("rifle")
+weapon_2 = NodePath("smg")
+
+[node name="rifle" parent="SubViewportContainer/SubViewport/WeaponCamera/WeaponHandler" node_paths=PackedStringArray("ammo_handler") instance=ExtResource("3_m3dbh")]
+ammo_handler = NodePath("../../AmmoHandler")
+
+[node name="smg" parent="SubViewportContainer/SubViewport/WeaponCamera/WeaponHandler" node_paths=PackedStringArray("ammo_handler") instance=ExtResource("3_xw4mp")]
+ammo_handler = NodePath("../../AmmoHandler")
+
+[node name="AmmoHandler" type="Node" parent="SubViewportContainer/SubViewport/WeaponCamera"]
+script = ExtResource("6_cm0ym")
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 15
@@ -33,7 +133,27 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="Crosshair" type="Control" parent="CenterContainer"]
 layout_mode = 2
 script = ExtResource("3_4c3og")
+
+[node name="DamageTexture" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(576, 324)
+mouse_filter = 2
+texture = ExtResource("5_jbh87")
+
+[node name="DamageAnimationPlayer" type="AnimationPlayer" parent="DamageTexture"]
+libraries = {
+"": SubResource("AnimationLibrary_usafc")
+}
+
+[node name="GameOverMenu" parent="." instance=ExtResource("6_mmoj2")]
+visible = false
