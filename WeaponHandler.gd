@@ -20,6 +20,7 @@ func equip(active_weapon: Node3D) -> void:
 	for child in get_children():
 		if child == active_weapon:
 			child.visible = true
+			child.ammo_handler.update_ammo_label(child.ammo_type)
 			child.set_process(true)
 		else:
 			child.visible = false

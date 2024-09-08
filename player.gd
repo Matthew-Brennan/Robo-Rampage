@@ -7,12 +7,18 @@ extends CharacterBody3D
 @export var jump_height = 1.0
 @export var mouse_sensitivity = 0.002
 @export var max_hitpoints := 100
-
+@export var aim_multiplyer := 0.7
 @export var fall_multiplyer = 2.0
 
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var damage_animation_player: AnimationPlayer = $DamageTexture/DamageAnimationPlayer
 @onready var game_over_menu: Control = $GameOverMenu
+@onready var ammo_handler: AmmoHandler = %AmmoHandler
+@onready var smooth_camera: Camera3D = %SmoothCamera
+@onready var weapon_camera: Camera3D = %WeaponCamera
+
+@onready var smooth_camera_fov := smooth_camera.fov
+@onready var weapon_camera_fov := weapon_camera.fov
 
 
 # Get the gravity from the project settings to be synced with RigidBody nodes.
@@ -29,6 +35,17 @@ var hitpoints: int = max_hitpoints:
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _process(delta: float) -> void:
+	#change the FOV for aiming down sight
+	if Input.is_action_pressed("aim"):
+		#smooth_camera.fov = smooth_camera_fov * aim_multiplyer
+		#weapon_camera.fov = weapon_camera_fov * aim_multiplyer
+		smooth_camera.fov = lerp(smooth_camera.fov, smooth_camera_fov * aim_multiplyer, delta * 20.0)
+		weapon_camera.fov = lerp(weapon_camera.fov, weapon_camera_fov * aim_multiplyer, delta * 20.0)
+	else:
+		smooth_camera.fov = lerp(smooth_camera.fov, smooth_camera_fov, delta * 30.0)
+		weapon_camera.fov = lerp(weapon_camera.fov, weapon_camera_fov, delta * 30.0)
 
 func _physics_process(delta: float) -> void:
 	camera_rotation()
@@ -51,6 +68,9 @@ func _physics_process(delta: float) -> void:
 	if direction:
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
+		if Input.is_action_pressed("aim"):
+			velocity.x *= aim_multiplyer
+			velocity.z *= aim_multiplyer
 	else:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
@@ -60,6 +80,8 @@ func _physics_process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		mouse_motion = -event.relative * mouse_sensitivity
+		if Input.is_action_pressed("aim"):
+			mouse_motion *= aim_multiplyer
 	if event.is_action_pressed("ui_cancel"):
 		if Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
